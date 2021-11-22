@@ -1,0 +1,41 @@
+apiVersion: v1
+data:
+  config.json: |- 
+    {
+      "sink": "stdout"
+    }
+kind: ConfigMap
+metadata:
+  name: eventrouter-cm
+  namespace: event-router
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eventrouter
+  namespace: event-router
+  labels:
+    app: eventrouter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eventrouter
+  template:
+    metadata:
+      labels:
+        app: eventrouter
+        tier: control-plane-addons
+    spec:
+      containers:
+        - name: kube-eventrouter
+          image: gcr.io/heptio-images/eventrouter:latest
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+          - name: config-volume
+            mountPath: /etc/eventrouter
+      serviceAccount: eventrouter
+      volumes:
+        - name: config-volume
+          configMap:
+            name: eventrouter-cm
